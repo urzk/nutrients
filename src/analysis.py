@@ -119,13 +119,16 @@ def main() -> None:
                     help="卵類・乳類のたんぱく質下限 [g]（牛乳 3.3 g, ヨーグルト 3.6 g を含めるため低めに設定）")
     ap.add_argument("--groups", default="04,05,10,11,12,13")
     ap.add_argument("--with-biotin", action="store_true")
+    ap.add_argument("--cap", type=float, default=None,
+                    help="C を min(cap, C) で頭打ちにする（例: 1.0 で過剰分を評価しない）")
     ap.add_argument("--k", type=int, default=None)
     ap.add_argument("--kmax", type=int, default=12)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out", default=None)
     args = ap.parse_args()
 
-    out = ROOT / (args.out or f"results/{args.space}")
+    default_out = f"results/{args.space}" + (f"_cap{args.cap:g}" if args.cap is not None else "")
+    out = ROOT / (args.out or default_out)
     out.mkdir(parents=True, exist_ok=True)
 
     nut = dict(NUTRIENTS, **(OPTIONAL if args.with_biotin else {}))
@@ -136,6 +139,8 @@ def main() -> None:
     print(f"対象食品: {len(foods)} 件 (たんぱく質 >= {args.min_protein} g, 卵・乳は >= {args.min_protein_egg_dairy} g, 欠測除外 {n_all - len(foods)} 件)")
 
     C = compute_C(foods, dri, list(nut))
+    if args.cap is not None:
+        C = C.clip(upper=args.cap)
     X = to_space(C, args.space, args.floor)
     ideal = to_space(pd.DataFrame([np.ones(len(nut))], columns=list(nut)), args.space, args.floor)[0]
 

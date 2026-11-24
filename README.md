@@ -13,9 +13,10 @@ $$C_{i,\alpha}=\frac12\left(\frac{M_{i,\alpha}R_{m,p}}{M_{i,p}R_{m,\alpha}}+\fra
 pip install pandas openpyxl scikit-learn matplotlib
 python3 src/analysis.py              # log2 空間（既定）→ results/log/
 python3 src/analysis.py --space raw  # C をそのまま → results/raw/
+python3 src/analysis.py --cap 1.0    # C を min(1, C) で頭打ち → results/log_cap1/
 ```
 
-主なオプション: `--k`（k を固定）、`--min-protein`（既定 10 g）、`--min-protein-egg-dairy`（既定 3 g）、
+主なオプション: `--cap`（C の上限。1.0 で過剰分を評価しない）、`--k`（k を固定）、`--min-protein`（既定 10 g）、`--min-protein-egg-dairy`（既定 3 g）、
 `--floor`（log 化時の C=0 の下限、既定 1/16）、`--with-biotin`。
 
 ## データ
@@ -42,3 +43,13 @@ python3 src/analysis.py --space raw  # C をそのまま → results/raw/
 - `foods_clustered.csv`: 食品ごとの C、クラスタ、理想点との距離 `dist_to_ideal`、不足のみの指標 `shortfall_rms_log2`、C≥1 の栄養素数 `n_satisfied`
 - `cluster_summary.csv`: クラスタ中心（C 値）、件数、食品群の内訳、代表例
 - `k_selection.csv` / `k_selection.png`、`cluster_centers.png`（ヒートマップ）、`pca_clusters.png`（PCA 射影と理想点）
+
+## 解析一覧
+
+| ディレクトリ | 定義 | 空間 | 採用 k |
+|---|---|---|---|
+| `results/log/` | C（上限なし） | log2 | 11 |
+| `results/raw/` | C（上限なし） | そのまま | 2（外れ値 1 件が単独クラスタ。参考用） |
+| `results/log_cap1/` | min(1, C) | log2 | 12（k=13〜20 もシルエットは約 0.28〜0.29 で横ばい） |
+
+`log_cap1` では過剰分を評価しないため、理想点（原点）からの距離は不足量だけで決まる。
