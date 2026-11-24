@@ -154,5 +154,5 @@ k = 13 が 0.295 でわずかに高いものの差は小さいため、k = 12 �
 | | 解析 1 | 解析 2 |
 |---|---|---|
 | クラスタ中心ヒートマップ | ![](results/log/cluster_centers.png) | ![](results/log_cap1/cluster_centers.png) |
-| PCA 射影と理想点 | ![](results/log/pca_clusters.png) | ![](results/log_cap1/pca_clusters.png) |
+| PCA 射影と理想点（各点に食品名。拡大して読む場合は同じフォルダの `pca_clusters.pdf`） | ![](results/log/pca_clusters.png) | ![](results/log_cap1/pca_clusters.png) |
 | k の選択 | ![](results/log/k_selection.png) | ![](results/log_cap1/k_selection.png) |

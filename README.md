@@ -68,7 +68,7 @@ python3 src/analysis.py --cap 1.0    # C を min(1, C) で頭打ち → results/
 
 - `foods_clustered.csv`: 食品ごとの C、クラスタ、理想点との距離 `dist_to_ideal`、不足のみの指標 `shortfall_rms_log2`、C≥1 の栄養素数 `n_satisfied`
 - `cluster_summary.csv`: クラスタ中心（C 値）、件数、食品群の内訳、代表例
-- `k_selection.csv` / `k_selection.png`、`cluster_centers.png`（ヒートマップ）、`pca_clusters.png`（PCA 射影と理想点）
+- `k_selection.csv` / `k_selection.png`、`cluster_centers.png`（ヒートマップ）、`pca_clusters.png` / `.pdf`（PCA 射影と理想点。各点に食品名を表示）
 
 ## 解析一覧
 

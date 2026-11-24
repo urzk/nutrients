@@ -190,10 +190,18 @@ def main() -> None:
     summ.to_csv(out / "cluster_summary.csv", index=False, float_format="%.4g")
     print(summ.drop(columns="examples").round(2).to_string(index=False))
 
-    plot_all(out, ksel, k, X, labels, centers, ideal, nut, res, args.space)
+    plot_all(out, ksel, k, X, labels, centers, ideal, nut, foods["name"].to_numpy(), args.space)
 
 
-def plot_all(out, ksel, k, X, labels, centers, ideal, nut, res, space):
+def short_name(name: str) -> str:
+    """図のラベル用に食品名を短くする（＜畜肉類＞ などの分類見出しと括弧を落とす）。"""
+    import re
+    name = re.sub(r"＜[^＞]*＞", "", name)
+    name = re.sub(r"[［］（）]", " ", name)
+    return re.sub(r"\s+", " ", name).strip()
+
+
+def plot_all(out, ksel, k, X, labels, centers, ideal, nut, names, space):
     cmap = plt.get_cmap("tab10" if k <= 10 else "tab20")
 
     # k 選択
@@ -227,27 +235,32 @@ def plot_all(out, ksel, k, X, labels, centers, ideal, nut, res, space):
     # PCA 散布図 + 理想点
     pca = PCA(n_components=2).fit(X)
     P, Pc, Pi = pca.transform(X), pca.transform(centers), pca.transform(ideal[None])[0]
-    fig, ax = plt.subplots(figsize=(9, 7))
-    markers = {"植物性": "^", "動物性": "o"}
-    origin = res.set_index(res.index)["origin"]  # res は並べ替え済みなので X と対応させ直す
+    # 食品名を全点に小さく載せるため大きめのキャンバスにする（PDF は拡大して読める）
+    fig, ax = plt.subplots(figsize=(24, 18))
     for c in range(k):
         m = labels == c
-        ax.scatter(P[m, 0], P[m, 1], s=12, alpha=0.6, color=cmap(c), label=f"C{c}")
+        ax.scatter(P[m, 0], P[m, 1], s=14, alpha=0.6, color=cmap(c), label=f"C{c}")
+    for (x, y), nm, c in zip(P, names, labels):
+        ax.annotate(short_name(nm), (x, y), xytext=(1.5, 1.5), textcoords="offset points",
+                    fontsize=2.8, color=tuple(0.6 * v for v in cmap(c)[:3]))  # 淡色でも読めるよう暗くする
     ax.scatter(Pc[:, 0], Pc[:, 1], s=160, marker="X", color="black", edgecolor="white")
     for c in range(k):
-        ax.annotate(f"C{c}", Pc[c], xytext=(5, 5), textcoords="offset points", fontsize=10, weight="bold")
+        ax.annotate(f"C{c}", Pc[c], xytext=(5, 5), textcoords="offset points", fontsize=14, weight="bold")
     ax.scatter(*Pi, s=300, marker="*", color="gold", edgecolor="black", zorder=5, label="理想 (全成分 1)")
     # 主成分の負荷ベクトル
     scale = np.abs(P).max() * 0.45
     for j, lab in enumerate(nut.values()):
         v = pca.components_[:, j] * scale
         ax.arrow(Pi[0], Pi[1], v[0], v[1], color="gray", alpha=0.6, head_width=0.08)
-        ax.text(Pi[0] + v[0] * 1.08, Pi[1] + v[1] * 1.08, lab, color="dimgray", fontsize=9)
+        ax.text(Pi[0] + v[0] * 1.08, Pi[1] + v[1] * 1.08, lab, color="dimgray", fontsize=12)
     ev = pca.explained_variance_ratio_
     ax.set_xlabel(f"PC1 ({ev[0]:.0%})"); ax.set_ylabel(f"PC2 ({ev[1]:.0%})")
     ax.set_title(f"k-means++ (k={k}) の PCA 射影（{space} 空間）")
-    ax.legend(markerscale=1.5, fontsize=8, loc="best")
-    fig.tight_layout(); fig.savefig(out / "pca_clusters.png", dpi=150); plt.close(fig)
+    ax.legend(markerscale=2, fontsize=12, loc="best")
+    fig.tight_layout()
+    fig.savefig(out / "pca_clusters.png", dpi=200)
+    fig.savefig(out / "pca_clusters.pdf")
+    plt.close(fig)
 
 
 if __name__ == "__main__":
