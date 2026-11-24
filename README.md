@@ -40,9 +40,10 @@ pip install pandas openpyxl scikit-learn matplotlib
 python3 src/analysis.py              # log2 空間（既定）→ results/log/
 python3 src/analysis.py --space raw  # C をそのまま → results/raw/
 python3 src/analysis.py --cap 1.0    # C を min(1, C) で頭打ち → results/log_cap1/
+python3 src/analysis.py --exclude VITB12,FOL  # B12・葉酸を除外 → results/log_noVITB12_noFOL/
 ```
 
-主なオプション: `--cap`（C の上限。1.0 で過剰分を評価しない）、`--k`（k を固定）、`--min-protein`（既定 10 g）、`--min-protein-egg-dairy`（既定 3 g）、
+主なオプション: `--cap`（C の上限。1.0 で過剰分を評価しない）、`--exclude`（除外する栄養素の成分識別子をカンマ区切りで指定）、`--k`（k を固定）、`--min-protein`（既定 10 g）、`--min-protein-egg-dairy`（既定 3 g）、
 `--floor`（log 化時の C=0 の下限、既定 1/16）、`--with-biotin`。
 
 ## データ
@@ -77,5 +78,6 @@ python3 src/analysis.py --cap 1.0    # C を min(1, C) で頭打ち → results/
 | `results/log/` | C（上限なし） | log2 | 11 |
 | `results/raw/` | C（上限なし） | そのまま | 2（外れ値 1 件が単独クラスタ。参考用） |
 | `results/log_cap1/` | min(1, C) | log2 | 12（k=13〜20 もシルエットは約 0.28〜0.29 で横ばい） |
+| `results/log_noVITB12_noFOL/` | C（上限なし）、B12・葉酸を除く 6 栄養素（対象 901 件） | log2 | 9 |
 
 `log_cap1` では過剰分を評価しないため、理想点（原点）からの距離は不足量だけで決まる。

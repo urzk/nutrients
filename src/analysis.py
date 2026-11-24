@@ -119,6 +119,8 @@ def main() -> None:
                     help="卵類・乳類のたんぱく質下限 [g]（牛乳 3.3 g, ヨーグルト 3.6 g を含めるため低めに設定）")
     ap.add_argument("--groups", default="04,05,10,11,12,13")
     ap.add_argument("--with-biotin", action="store_true")
+    ap.add_argument("--exclude", default="",
+                    help="除外する栄養素の成分識別子をカンマ区切りで（例: VITB12,FOL）")
     ap.add_argument("--cap", type=float, default=None,
                     help="C を min(cap, C) で頭打ちにする（例: 1.0 で過剰分を評価しない）")
     ap.add_argument("--k", type=int, default=None)
@@ -127,11 +129,17 @@ def main() -> None:
     ap.add_argument("--out", default=None)
     args = ap.parse_args()
 
-    default_out = f"results/{args.space}" + (f"_cap{args.cap:g}" if args.cap is not None else "")
+    excluded = [e for e in args.exclude.split(",") if e]
+    default_out = (f"results/{args.space}" + (f"_cap{args.cap:g}" if args.cap is not None else "")
+                   + "".join(f"_no{e}" for e in excluded))
     out = ROOT / (args.out or default_out)
     out.mkdir(parents=True, exist_ok=True)
 
     nut = dict(NUTRIENTS, **(OPTIONAL if args.with_biotin else {}))
+    unknown = [e for e in excluded if e not in nut]
+    if unknown:
+        raise SystemExit(f"--exclude に不明な成分識別子: {unknown}（使えるもの: {list(nut)}）")
+    nut = {a: lab for a, lab in nut.items() if a not in excluded}
     dri = pd.read_csv(DRI_CSV)
     foods = load_foods(args.min_protein, args.min_protein_egg_dairy, set(args.groups.split(",")))
     n_all = len(foods)
